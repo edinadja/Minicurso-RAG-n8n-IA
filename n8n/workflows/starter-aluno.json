@@ -1,0 +1,55 @@
+{
+  "name": "RAG Minicurso - Starter (para completar em aula)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-ingest",
+      "name": "1. Iniciar Ingestão (manual)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-200, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "perguntar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-question",
+      "name": "1. Receber Pergunta (webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 260]
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo 1 - Ingestão (a construir)\n\nPasso a passo:\n1. Adicione um node \"Read/Write File from Disk\" para ler um arquivo de /home/node/.n8n-files/docs (pasta ./docs do projeto)\n2. Adicione um node \"HTTP Request\" (POST) para http://python-api:8000/ingest, enviando o arquivo como multipart-form-data no campo \"file\"\n3. Execute o workflow e confira o resultado (quantos chunks foram criados)",
+        "height": 260,
+        "width": 460
+      },
+      "id": "note-ingest",
+      "name": "Nota - Ingestão",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -260]
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo 2 - Pergunta e Resposta (a construir)\n\nPasso a passo:\n1. Adicione um node \"HTTP Request\" (POST) para http://python-api:8000/search com body JSON { \"question\": <pergunta recebida>, \"top_k\": 4 }\n2. Adicione um node \"Edit Fields (Set)\" para montar o prompt final, combinando o contexto retornado com a pergunta original\n3. Adicione um node \"HTTP Request\" (POST) para https://openrouter.ai/api/v1/chat/completions com:\n   - Header Auth: Authorization = Bearer sk-or-sua-chave-aqui (criar credencial \"Header Auth\" no node)\n   - Body JSON: { \"model\": \"meta-llama/llama-3.3-70b-instruct\", \"messages\": [ { \"role\": \"user\", \"content\": <seu prompt> } ] }\n4. Adicione um node \"Respond to Webhook\" para devolver o campo choices[0].message.content\n\nTeste no final com:\ncurl -X POST http://localhost:5678/webhook/perguntar -H 'Content-Type: application/json' -d '{\"question\": \"sua pergunta aqui\"}'",
+        "height": 320,
+        "width": 700
+      },
+      "id": "note-query",
+      "name": "Nota - Pergunta/Resposta",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, 460]
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

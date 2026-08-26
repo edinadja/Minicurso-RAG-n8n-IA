@@ -1,0 +1,34 @@
+Política de Home Office - Empresa Fictícia TechNova
+
+1. Elegibilidade
+Podem solicitar home office os colaboradores com no mínimo 6 meses de empresa,
+que estejam em cargos cuja atividade não exija presença física obrigatória
+(ex.: atendimento presencial, operação de máquinas, recepção).
+
+2. Modelo de trabalho
+A TechNova adota o modelo híbrido: os colaboradores elegíveis podem trabalhar
+remotamente até 3 dias por semana, sendo obrigatória a presença na sede às
+terças e quintas-feiras para reuniões de equipe.
+
+3. Equipamentos
+A empresa fornece notebook corporativo e auxílio mensal de R$ 150,00 para
+despesas com internet e energia elétrica, pago via folha de pagamento.
+
+4. Horário de trabalho
+O colaborador em home office deve cumprir a mesma carga horária contratual,
+com flexibilidade de até 2 horas no início e término do expediente, desde que
+mantenha disponibilidade entre 10h e 16h (horário núcleo).
+
+5. Segurança da informação
+É proibido o uso de redes Wi-Fi públicas para acessar sistemas internos da
+empresa sem VPN corporativa ativada. O uso de VPN é obrigatório para qualquer
+acesso remoto a servidores internos.
+
+6. Solicitação e aprovação
+O pedido de adesão ao home office deve ser feito pelo colaborador ao seu
+gestor direto, através do sistema interno RH Digital, com prazo de análise
+de até 5 dias úteis.
+
+7. Revisão da política
+Esta política é revisada anualmente pelo setor de Recursos Humanos e pode
+sofrer alterações mediante comunicado prévio de 30 dias aos colaboradores.

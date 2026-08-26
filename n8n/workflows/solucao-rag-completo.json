@@ -1,0 +1,172 @@
+{
+  "name": "RAG Minicurso - Solução Completa",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-ingest",
+      "name": "1. Iniciar Ingestão (manual)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-200, 0]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "/home/node/.n8n-files/docs/exemplo_politica_home_office.txt",
+        "options": {}
+      },
+      "id": "read-file",
+      "name": "2. Ler Documento",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [40, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://python-api:8000/ingest",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-ingest",
+      "name": "3. Enviar para Python API (/ingest)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "perguntar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-question",
+      "name": "1. Receber Pergunta (webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://python-api:8000/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"question\": $json.body.question, \"top_k\": 4 } }}",
+        "options": {}
+      },
+      "id": "http-search",
+      "name": "2. Buscar Contexto (/search)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [40, 260]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "prompt",
+              "type": "string",
+              "value": "=Você é um assistente que responde SOMENTE com base no contexto abaixo. Se a resposta não estiver no contexto, diga claramente que não sabe.\n\nContexto:\n{{ $json.context }}\n\nPergunta: {{ $json.question }}\n\nResposta:"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "build-prompt",
+      "name": "3. Montar Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [280, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"meta-llama/llama-3.3-70b-instruct\", \"messages\": [ { \"role\": \"user\", \"content\": $json.prompt } ] } }}",
+        "options": {}
+      },
+      "id": "http-llm",
+      "name": "4. Gerar Resposta (OpenRouter)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 260]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"pergunta\": $('2. Buscar Contexto (/search)').item.json.question, \"resposta\": $json.choices[0].message.content } }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "5. Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [760, 260]
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo 1 - Ingestão\nLê um documento local e envia para a Python API, que faz chunking + embeddings e indexa no Qdrant.\n\nTroque o caminho do arquivo no node \"2. Ler Documento\" para testar com outros documentos da pasta /docs.",
+        "height": 200,
+        "width": 460
+      },
+      "id": "note-ingest",
+      "name": "Nota - Ingestão",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -220]
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo 2 - Pergunta e Resposta\n1) Recebe a pergunta via webhook (POST /webhook/perguntar)\n2) Busca os chunks mais relevantes no Qdrant via Python API\n3) Monta o prompt com o contexto recuperado\n4) Chama o LLM via OpenRouter para gerar a resposta final\n5) Retorna a resposta ao usuário\n\nANTES DE ATIVAR: abra o node \"4. Gerar Resposta (OpenRouter)\" e crie uma credencial do tipo \"Header Auth\" com Name=Authorization e Value=Bearer sk-or-sua-chave-aqui\n\nTeste com: curl -X POST http://localhost:5678/webhook/perguntar -H 'Content-Type: application/json' -d '{\"question\": \"Quantos dias de home office são permitidos?\"}'",
+        "height": 240,
+        "width": 700
+      },
+      "id": "note-query",
+      "name": "Nota - Pergunta/Resposta",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, 440]
+    }
+  ],
+  "connections": {
+    "1. Iniciar Ingestão (manual)": {
+      "main": [[{ "node": "2. Ler Documento", "type": "main", "index": 0 }]]
+    },
+    "2. Ler Documento": {
+      "main": [[{ "node": "3. Enviar para Python API (/ingest)", "type": "main", "index": 0 }]]
+    },
+    "1. Receber Pergunta (webhook)": {
+      "main": [[{ "node": "2. Buscar Contexto (/search)", "type": "main", "index": 0 }]]
+    },
+    "2. Buscar Contexto (/search)": {
+      "main": [[{ "node": "3. Montar Prompt", "type": "main", "index": 0 }]]
+    },
+    "3. Montar Prompt": {
+      "main": [[{ "node": "4. Gerar Resposta (Ollama)", "type": "main", "index": 0 }]]
+    },
+    "4. Gerar Resposta (OpenRouter)": {
+      "main": [[{ "node": "5. Responder Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
